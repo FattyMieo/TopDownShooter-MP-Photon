@@ -154,6 +154,7 @@
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="MyApplication.h" />
     <ClInclude Include="NetworkListener.h" />
+    <ClInclude Include="PhotonKey.h" />
     <ClInclude Include="ResDefinition.h" />
     <ClInclude Include="Sprite.h" />
     <ClInclude Include="Spritesheet.h" />

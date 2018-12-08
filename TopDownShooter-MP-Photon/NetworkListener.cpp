@@ -1,8 +1,9 @@
 #include "NetworkListener.h"
 #include <iostream>
 #include "MyApplication.h"
+#include "PhotonKey.h"
 
-static const ExitGames::Common::JString appId = L"40783e03-573d-4b7a-a07e-1421e1c9312d"; // set your app id here
+static const ExitGames::Common::JString appId = PhotonKey::GenerateKey(); // set your app id here
 static const ExitGames::Common::JString appVersion = L"1.0";
 static const ExitGames::Common::JString PLAYER_NAME = L"Windows";
 
@@ -51,25 +52,6 @@ void PhotonListener::opJoinOrCreateRoom(void)
 	//mpOutputListener->writeLine(ExitGames::Common::JString(L"joining or creating room ") + name + L"...");
 }
 */
-
-void NetworkListener::sendEvent(void)
-{
-	//static int64 count = 0;
-	//mLoadBalancingClient.opRaiseEvent(false, ++count, 0);
-	int number = 2;
-	mLoadBalancingClient.opRaiseEvent(false, number, 0);
-}
-
-void NetworkListener::sendEvent(float myID, float x, float y)
-{
-	//if(mLoadBalancingClient.getIsInRoom() || mLoadBalancingClient.getIsInGameRoom())
-	float data[3];
-	data[0] = myID;
-	data[1] = x;
-	data[2] = y;
-
-	mLoadBalancingClient.opRaiseEvent(true, data, 3, 1);
-}
 
 void NetworkListener::sendEvent(unsigned char* data, int size)
 {

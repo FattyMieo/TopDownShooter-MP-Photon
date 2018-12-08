@@ -5,8 +5,6 @@
 class NetworkListener : private ExitGames::LoadBalancing::Listener
 {
 public:
-	float testCursor[2];
-
 	NetworkListener();
 	void run(void);
 	void connect(void);
@@ -14,9 +12,14 @@ public:
 	//void opCreateRoom(void);
 	//void opJoinRandomRoom(void);
 	//void opJoinOrCreateRoom(void);
-	void sendEvent(void);
-	void sendEvent(float myID, float x, float y);
 	void sendEvent(unsigned char* data, int size);
+
+	//Singleton
+	static NetworkListener& getInstance()
+	{
+		static NetworkListener instance;
+		return instance;
+	}
 
 private:
 	ExitGames::LoadBalancing::Client mLoadBalancingClient;
