@@ -33,40 +33,76 @@ float Vector2::GetSquaredMagnitude()
 	return (this->x * this->x) + (this->y * this->y);
 }
 
-Vector2 Vector2::operator+(const Vector2& vec)
+Vector2 Vector2::operator+(Vector2 vec)
 {
 	return Vector2(this->x + vec.x, this->y + vec.y);
 }
 
-Vector2& Vector2::operator+=(const Vector2& vec)
+Vector2 Vector2::operator-(Vector2 vec)
+{
+	return Vector2(this->x - vec.x, this->y - vec.y);
+}
+
+Vector2& Vector2::operator+=(Vector2 vec)
 {
 	this->x += vec.x;
 	this->y += vec.y;
 	return *this;
 }
 
-Vector2& Vector2::operator*=(const float f)
+Vector2 & Vector2::operator-=(Vector2 vec)
+{
+	this->x -= vec.x;
+	this->y -= vec.y;
+	return *this;
+}
+
+Vector2& Vector2::operator*=(float f)
 {
 	this->x *= f;
 	this->y *= f;
 	return *this;
 }
 
-Vector2& Vector2::operator*=(const Vector2& vec)
+Vector2& Vector2::operator*=(Vector2 vec)
 {
 	this->x *= vec.x;
 	this->y *= vec.y;
 	return *this;
 }
 
-Vector2 Vector2::operator*(const float f)
+Vector2 Vector2::operator*(float f)
 {
 	return Vector2(this->x * f, this->y * f);
 }
 
-Vector2 Vector2::operator*(const Vector2& vec)
+Vector2 Vector2::operator*(Vector2 vec)
 {
 	return Vector2(this->x * vec.x, this->y * vec.y);
+}
+
+Vector2 & Vector2::operator/=(float f)
+{
+	this->x /= f;
+	this->y /= f;
+	return *this;
+}
+
+Vector2 & Vector2::operator/=(Vector2 vec)
+{
+	this->x /= vec.x;
+	this->y /= vec.y;
+	return *this;
+}
+
+Vector2 Vector2::operator/(float f)
+{
+	return Vector2(this->x / f, this->y / f);
+}
+
+Vector2 Vector2::operator/(Vector2 vec)
+{
+	return Vector2(this->x / vec.x, this->y / vec.y);
 }
 
 Vector2 Vector2::Random(Vector2 min, Vector2 max)
@@ -85,4 +121,14 @@ Vector2 Vector2::Lerp(Vector2 a, Vector2 b, float t)
 	ret.y = MathExtension::Lerp(a.y, b.y, t);
 
 	return ret;
+}
+
+Vector2 operator+(const float f, Vector2 vec)
+{
+	return vec + f;
+}
+
+Vector2 operator*(const float f, Vector2 vec)
+{
+	return vec * f;
 }

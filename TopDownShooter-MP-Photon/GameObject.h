@@ -9,7 +9,7 @@
 
 class GameObject : public IRunnable, public IDrawable
 {
-private:
+protected:
 	bool m_active;
 
 	//Container<Component> m_Components;

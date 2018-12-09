@@ -4,6 +4,8 @@
 
 namespace MathExtension
 {
+	static const float PI = 3.14159265359f;
+
 	static int GetRandomInt(int min, int max)
 	{
 		if (min == max)

@@ -127,6 +127,7 @@
     <ClCompile Include="MyApplication.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="NetworkListener.cpp" />
+    <ClCompile Include="PhysicalGameObject.cpp" />
     <ClCompile Include="Sprite.cpp" />
     <ClCompile Include="Spritesheet.cpp" />
     <ClCompile Include="Text.cpp" />
@@ -158,6 +159,7 @@
     <ClInclude Include="MyApplication.h" />
     <ClInclude Include="NetworkListener.h" />
     <ClInclude Include="PhotonKey.h" />
+    <ClInclude Include="PhysicalGameObject.h" />
     <ClInclude Include="ResDefinition.h" />
     <ClInclude Include="Sprite.h" />
     <ClInclude Include="Spritesheet.h" />
