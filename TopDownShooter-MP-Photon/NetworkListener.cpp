@@ -108,11 +108,6 @@ void NetworkListener::customEventAction(int playerNr, nByte eventCode, const Exi
 //	EGLOG(ExitGames::Common::DebugLevel::ALL, L"");
 //	mpOutputListener->write(ExitGames::Common::JString(L"r") + ExitGames::Common::ValueObject<long long>(eventContent).getDataCopy() + L" ");
 
-	//Send one data
-	//int data = ExitGames::Common::ValueObject<int>(eventContent).getDataCopy();
-	//std::cout << "received : " << data << std::endl;
-
-	//Send multiple datas
 	unsigned char* data = ExitGames::Common::ValueObject<unsigned char*>(eventContent).getDataCopy();
 	const int size = *ExitGames::Common::ValueObject<unsigned char*>(eventContent).getSizes();
 	if (data)
@@ -128,18 +123,6 @@ void NetworkListener::customEventAction(int playerNr, nByte eventCode, const Exi
 	{
 		std::cout << "Invalid data!" << std::endl;
 	}
-
-	//float* data = ExitGames::Common::ValueObject<float*>(eventContent).getDataCopy();
-	//if (data)
-	//{
-	//	std::cout << data[0] << ", received : " << data[1] << ", " << data[2] << std::endl;
-	//	testCursor[0] = data[1];
-	//	testCursor[1] = data[2];
-	//}
-	//else
-	//{
-	//	std::cout << "Invalid data!" << std::endl;
-	//}
 }
 
 void NetworkListener::connectReturn(int errorCode, const ExitGames::Common::JString& errorString, const ExitGames::Common::JString& cluster)
@@ -228,5 +211,6 @@ void NetworkListener::onAvailableRegions(const ExitGames::Common::JVector<ExitGa
 //	mpOutputListener->writeLine(L"onAvailableRegions: " + availableRegions.toString() + L" / " + availableRegionServers.toString());
 	// select first region from list
 	//mpOutputListener->writeLine(L"selecting region: " + availableRegions[0]);
-	mLoadBalancingClient.selectRegion(availableRegions[0]);
+	//mLoadBalancingClient.selectRegion(availableRegions[0]);
+	mLoadBalancingClient.selectRegion("asia");
 }

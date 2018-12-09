@@ -9,13 +9,15 @@
 namespace FMODExtension
 {
 	//FMOD Error Check
-	static void FMOD_ErrorCheck(FMOD_RESULT result)
+	static bool FMOD_ErrorCheck(FMOD_RESULT result)
 	{
 		if (result != FMOD_OK)
 		{
 			printf("FMOD error! (%d) %s\n", result, FMOD_ErrorString(result));
+			return false;
 			//system("PAUSE");
 		}
+		return true;
 	}
 
 	static void FMOD_Init(FMOD::System* m_fmodSystem)

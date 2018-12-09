@@ -5,14 +5,11 @@ Application::Application()
 
 }
 
-Application::~Application()
-{
+Application::~Application() { }
 
-}
-
-void Application::InitDependencies(FMOD::System* fmodSystem, NetworkListener* networkListener)
+void Application::InitDependencies(AudioManager* audioManager, NetworkListener* networkListener)
 {
-	m_fmodSystem = fmodSystem;
+	m_audioManager = audioManager;
 	m_networkListener = networkListener;
 }
 

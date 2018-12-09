@@ -15,10 +15,10 @@ public:
 	void sendEvent(unsigned char* data, int size);
 
 	//Singleton
-	static NetworkListener& getInstance()
+	static NetworkListener* GetInstance()
 	{
 		static NetworkListener instance;
-		return instance;
+		return &instance;
 	}
 
 private:

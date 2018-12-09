@@ -4,6 +4,7 @@
 
 #include <GLFW/glfw3.h>
 #include "FMODExtension.h"
+#include "AudioManager.h"
 #include "NetworkListener.h"
 #include "IRunnable.h"
 #include "IDrawable.h"
@@ -14,7 +15,7 @@
 class Application : public IRunnable, public IDrawable
 {
 protected:
-	FMOD::System* m_fmodSystem;
+	AudioManager* m_audioManager;
 	NetworkListener* m_networkListener;
 	Container<GameObject> m_GameObjects;
 
@@ -22,7 +23,7 @@ public:
 	Application();
 	virtual ~Application();
 
-	void InitDependencies(FMOD::System* fmodSystem, NetworkListener* networkListener);
+	void InitDependencies(AudioManager* audioManager, NetworkListener* networkListener);
 
 	virtual void Start();
 	virtual void Update(float deltaTime);

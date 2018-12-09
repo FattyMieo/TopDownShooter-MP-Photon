@@ -4,6 +4,7 @@
 #include <GLFW/glfw3.h>
 
 #include "FMODExtension.h"
+#include "AudioManager.h"
 #include "PhotonListener.h"
 #include "ResDefinition.h"
 
@@ -17,17 +18,6 @@ using namespace std;
 
 //==================================================
 
-//FMOD
-FMOD::System* fmodSystem = NULL;
-
-//Photon
-NetworkListener* networkListener = NULL;
-
-//Engine
-Application* app = MyApplication::GetInstance();
-
-//==================================================
-
 //Delegates
 void onWindowResized(GLFWwindow* window, int width, int height);
 void onCursorMoved(GLFWwindow* window, double xPos, double yPos);
@@ -38,19 +28,20 @@ void onKey(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 void gameStart()
 {
-	networkListener->connect();
-	app->Start();
+	NetworkListener::GetInstance()->connect();
+	MyApplication::GetInstance()->Start();
 }
 
 void gameUpdate(float deltaTime)
 {
-	networkListener->run();
-	app->Update(deltaTime);
+	NetworkListener::GetInstance()->run();
+	AudioManager::GetInstance()->GetSystem()->update();
+	MyApplication::GetInstance()->Update(deltaTime);
 }
 
 void gameDraw()
 {
-	app->Draw();
+	MyApplication::GetInstance()->Draw();
 }
 
 int main()
@@ -61,7 +52,7 @@ int main()
 
 	//GLFW
 	GLFWwindow* window;
-	const char* windowTitle = "PhotonProject";
+	const char* windowTitle = "Top Down Shooter MP";
 	bool useVSync = true;
 
 	//Engine
@@ -108,25 +99,8 @@ int main()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_ALPHA_TEST);
 
-	//Setup FMOD
-	FMODExtension::FMOD_Init(fmodSystem);
-
-	//Initialize the network
-	networkListener = new NetworkListener();
-
-	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	//!!!!!!!!!!!!!!!!!!!!!!!Change to Singleton!!!!!!!!!!!!!!!!!!!!!
-	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	app->InitDependencies(fmodSystem, networkListener);
-	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	//Setup dependencies
+	MyApplication::GetInstance()->InitDependencies(AudioManager::GetInstance(), NetworkListener::GetInstance());
 
 	// Run Application Start
 	gameStart();
@@ -170,7 +144,7 @@ void onWindowResized(GLFWwindow* window, int width, int height)
 
 void onCursorMoved(GLFWwindow* window, double xPos, double yPos)
 {
-	app->OnMouseCursorMove((float)xPos, (float)yPos);
+	MyApplication::GetInstance()->OnMouseCursorMove((float)xPos, (float)yPos);
 }
 
 void onMouseButton(GLFWwindow* window, int button, int action, int mods)
@@ -178,10 +152,10 @@ void onMouseButton(GLFWwindow* window, int button, int action, int mods)
 	switch (action)
 	{
 	case GLFW_PRESS:
-		app->OnMousePress(button);
+		MyApplication::GetInstance()->OnMousePress(button);
 		break;
 	case GLFW_RELEASE:
-		app->OnMouseRelease(button);
+		MyApplication::GetInstance()->OnMouseRelease(button);
 		break;
 	}
 }
@@ -191,10 +165,10 @@ void onKey(GLFWwindow* window, int key, int scancode, int action, int mods)
 	switch (action)
 	{
 	case GLFW_PRESS:
-		app->OnKeyPress(key);
+		MyApplication::GetInstance()->OnKeyPress(key);
 		break;
 	case GLFW_RELEASE:
-		app->OnKeyRelease(key);
+		MyApplication::GetInstance()->OnKeyRelease(key);
 		break;
 	}
 }
