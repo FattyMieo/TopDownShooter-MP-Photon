@@ -90,7 +90,7 @@ int main()
 	glfwSetKeyCallback(window, onKey);
 
 	// Hide mouse cursor
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
 	// To support alpha channel
 	glDisable(GL_CULL_FACE);

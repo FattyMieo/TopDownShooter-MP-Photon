@@ -26,106 +26,142 @@ void MyApplication::Start()
 	m_GameObjects.GetList().push_back(statusText);
 	statusText->Start();
 	statusText->GetTransform().position = Vector2(RESOLUTION_X / 2.0f, 64.0f);
-	
-	boardSprite = Instantiate(Vector2(RESOLUTION_X / 2.0f, RESOLUTION_Y / 2.0f), 0.0f);
-	sp = &(boardSprite->GetSprite());
-	sp->LoadFromFile("Board.png");
-	sp->SetDimension(256, 256);
+
+	player = new PhysicalGameObject();
+	m_GameObjects.GetList().push_back(player);
+	m_PhysObjects.GetList().push_back(player);
+	player->radius = 30.0f;
+	player->Start();
+	player->GetTransform().position = Vector2(20.0f, RESOLUTION_Y / 2.0f);
+	player->velocity.x = 1.0f;
+	sp = &(player->GetSprite());
+	sp->LoadFromFile("Ball.png");
+	sp->SetDimension(40, 40);
 	sp->SetBlendingMode(BM_Alpha);
+	sp->SetColor(Color(255, 0, 0));
 
-	boardSymbols = new Text*[9];
-	for (int i = 0; i < 9; ++i)
-	{
-		boardSymbols[i] = new Text(" ");
-		m_GameObjects.GetList().push_back(boardSymbols[i]);
-		boardSymbols[i]->Start();
-		float posX = ((i % 3) - 1) * 96.0f;
-		float posY = ((i / 3) - 1) * 96.0f;
-		boardSymbols[i]->GetTransform().position = Vector2(RESOLUTION_X / 2.0f + posX, RESOLUTION_Y / 2.0f + posY);
-		boardSymbols[i]->GetTransform().scale = Vector2(4.0f);
-	}
+	player->SetActive(false);
 
-	functionButton = new Text("");
-	m_GameObjects.GetList().push_back(functionButton);
-	functionButton->Start();
-	functionButton->GetTransform().position = Vector2(RESOLUTION_X / 2.0f, RESOLUTION_Y - 64.0f);
-
-	myCursor = Instantiate(Vector2(0.0f), 0.0f);
-	sp = &(myCursor->GetSprite());
-	sp->LoadFromFile("Cursor.png");
-	sp->SetDimension(128, 128);
+	opponent = new PhysicalGameObject();
+	m_GameObjects.GetList().push_back(opponent);
+	m_PhysObjects.GetList().push_back(opponent);
+	opponent->radius = 20.0f;
+	opponent->Start();
+	opponent->GetTransform().position = Vector2(RESOLUTION_X - 20.0f, RESOLUTION_Y / 2.0f);
+	opponent->velocity.x = -1.0f;
+	sp = &(opponent->GetSprite());
+	sp->LoadFromFile("Ball.png");
+	sp->SetDimension(40, 40);
 	sp->SetBlendingMode(BM_Alpha);
-	sp->SetColor(Color(128, 255, 255));
+	sp->SetColor(Color(0, 255, 255));
 
-	otherCursor = Instantiate(Vector2(0.0f), 0.0f);
-	sp = &(otherCursor->GetSprite());
-	sp->LoadFromFile("Cursor.png");
-	sp->SetDimension(128, 128);
+	opponent->SetActive(false);
+
+	rocket = new PhysicalGameObject();
+	m_GameObjects.GetList().push_back(rocket);
+	m_PhysObjects.GetList().push_back(rocket);
+	rocket->radius = 10.0f;
+	rocket->Start();
+	rocket->GetTransform().position = Vector2(RESOLUTION_X / 2.0f, RESOLUTION_Y / 2.0f);
+	sp = &(rocket->GetSprite());
+	sp->LoadFromFile("Ball.png");
+	sp->SetDimension(20, 20);
 	sp->SetBlendingMode(BM_Alpha);
-	sp->SetColor(Color(255, 128, 128));
+	sp->SetColor(Color(255, 255, 255));
 
-	otherCursor->SetActive(false);
+	rocket->SetActive(false);
 }
 
 void MyApplication::Update(float deltaTime)
 {
 	Application::Update(deltaTime);
 
-	if (timer < maxTime)
+	for
+	(
+		std::list<PhysicalDestructible*>::iterator it = m_Bullets.GetList().begin();
+		it != m_Bullets.GetList().end();
+	)
 	{
-		timer += deltaTime;
-	}
-	else if (needsUpdate)
-	{
-		needsUpdate = false;
-		timer -= maxTime;
-		SendMove(myCursor->GetTransform().position);
-	}
-
-	otherCursor->GetTransform().position =
-		Vector2::Lerp
-		(
-			otherCursor->GetTransform().position,
-			otherCursorPos,
-			0.1f
-		);
-}
-
-void MyApplication::PreUpdateGame()
-{
-	if (CheckForDrawCondition())
-	{
-		board.status = EStatus::EStatus_End;
-		board.endStatus = EEndStatus::EEndStatus_Draw;
-	}
-	else if (CheckForWinCondition((EPlayerType)(activePlayer - 1))) // Minus one (PlayerID starts on 1)
-	{
-		board.status = EStatus::EStatus_End;
-		if (localPlayerID == activePlayer)
-			board.endStatus = EEndStatus::EEndStatus_Victory;
+		if ((*it)->isToBeDestroyed)
+		{
+			GameObject* temp = *it;
+			m_PhysObjects.GetList().remove(*it);
+			it = m_Bullets.GetList().erase(it);
+			Destroy(temp);
+		}
 		else
-			board.endStatus = EEndStatus::EEndStatus_Defeat;
+		{
+			++it;
+		}
 	}
-}
 
-void MyApplication::PostUpdateGame()
-{
-	if (board.status != EStatus::EStatus_End)
+	if (!m_gameStarted)
+		return;
+
+	//Update player
+	player->acceleration += keyAxis * deltaTime * 100.0f / player->mass;
+	if (player->GetTransform().scale.x > 1.0f)
+		player->GetTransform().scale -= deltaTime;
+	else
+		player->GetTransform().scale = Vector2(1.0f);
+
+	//Network Update
+	static double prevTime = glfwGetTime();
+
+	double time = glfwGetTime();
+	if (time - prevTime >= NetworkListener::gNetworkFrameTime)
 	{
-		if (localPlayerID == activePlayer)
-			board.status = EStatus::EStatus_Playing;
-		else
-			board.status = EStatus::EStatus_Waiting;
+		SendMove();
+
+		prevTime = time;
 	}
 
-	UpdateStatusText();
+	//Update Opponent's data
+	//very slowly interpolate from on-going predicting pos to lastest received pos. Without this interpolation, the offset of opponent position will keep being accumulated. 
+	opponent->GetTransform().position = (opponent->GetTransform().position * 0.995f) + (m_lastReceivedPos * 0.005f);
+	if (opponent->GetTransform().scale.x > 1.0f)
+		opponent->GetTransform().scale -= deltaTime;
+	else
+		opponent->GetTransform().scale = Vector2(1.0f);
+
+	//Update Rocket's data
+	rocket->GetTransform().position = (rocket->GetTransform().position * 0.995f) + (m_lastReceivedPos_Rocket * 0.005f);
+	if (rocket->GetTransform().scale.GetSquaredMagnitude() > 1.0f)
+		rocket->GetTransform().scale -= deltaTime;
+	else
+		rocket->GetTransform().scale = Vector2(1.0f);
 }
 
-void MyApplication::UpdateGame()
+void MyApplication::GenerateBullet(Vector2 cursorPosition, Vector2 playerPosition, Color playerColor)
 {
-	PreUpdateGame();
-	GoToNextPlayer(activePlayer);
-	PostUpdateGame();
+	Vector2 dir = cursorPosition - playerPosition;
+	dir.Normalize();
+	//dir /= 10000.0f;
+
+	PhysicalDestructible* bullet = new PhysicalDestructible();
+	m_GameObjects.GetList().push_back(bullet);
+	m_PhysObjects.GetList().push_back(bullet);
+	m_Bullets.GetList().push_back(bullet);
+	bullet->radius = 5.0f;
+	bullet->Start();
+	bullet->GetTransform().position = playerPosition + (dir * bullet->radius * 5.0f);
+	bullet->velocity = dir * 10.0f;
+
+	Sprite* sp = &(bullet->GetSprite());
+	sp->LoadFromFile("Ball.png");
+	sp->SetDimension(10, 10);
+	sp->SetBlendingMode(BM_Alpha);
+	sp->SetColor(playerColor);
+}
+
+void MyApplication::Attack()
+{
+	if (!m_gameStarted)
+		return;
+
+	GenerateBullet(cursorPos, player->GetTransform().position, player->GetSprite().GetColor());
+
+	SendAttack();
 }
 
 void MyApplication::UpdateStatusText()
@@ -139,7 +175,7 @@ void MyApplication::UpdateStatusText()
 		ss << "Waiting for opponent...";
 		break;
 	case EStatus::EStatus_Playing:
-		ss << "Now is Your Turn!";
+		ss << "Fight!";
 		break;
 	case EStatus::EStatus_End:
 		switch (board.endStatus)
@@ -163,298 +199,90 @@ void MyApplication::UpdateStatusText()
 		break;
 	}
 
-	if (activePlayer > 0)
-	{
-		if (board.status != EStatus::EStatus_End)
-		{
-			ssBTN << "Surrender";
-		}
-		else
-		{
-			ssBTN << "Rematch";
-		}
-	}
-
 	statusText->SetText(ss.str());
-	functionButton->SetText(ssBTN.str());
-}
-
-void MyApplication::UpdateCell(int cell)
-{
-	if (board.owned[cell] == EPlayerType::EPlayerType_O)
-	{
-		boardSymbols[cell]->SetText("O");
-	}
-	else if (board.owned[cell] == EPlayerType::EPlayerType_X)
-	{
-		boardSymbols[cell]->SetText("X");
-	}
-	else
-	{
-		boardSymbols[cell]->SetText(" ");
-	}
-}
-
-void MyApplication::UpdateBoard()
-{
-	for (int i = 0; i < 9; ++i)
-	{
-		UpdateCell(i);
-	}
-}
-
-void MyApplication::RestartGame(int startingPlayer)
-{
-	for (int i = 0; i < 9; ++i)
-	{
-		activePlayer = startingPlayer;
-		board.owned[i] = EPlayerType::EPlayerType_Empty;
-		UpdateCell(i);
-	}
-
-	board.status = EStatus::EStatus_Waiting;
-	PostUpdateGame();
-}
-
-bool MyApplication::CheckCursorWithinButton(Vector2 curPos)
-{
-	if
-	(
-		curPos.x >=
-		functionButton->GetTransform().position.x -
-		functionButton->GetText().length() / 4.0f * 
-		(
-			functionButton->GetSprite().GetDimension().x / 2.0f
-			- 32.0f
-		)
-		&&
-		curPos.x <=
-		functionButton->GetTransform().position.x +
-		functionButton->GetText().length() / 4.0f *
-		(
-			functionButton->GetSprite().GetDimension().x / 2.0f
-			- 32.0f
-		)
-		&&
-		curPos.y >=
-		functionButton->GetTransform().position.y -
-		(
-			functionButton->GetSprite().GetDimension().y / 2.0f
-			- 32.0f
-		)
-		&&
-		curPos.y <=
-		functionButton->GetTransform().position.y +
-		(
-			functionButton->GetSprite().GetDimension().y / 2.0f
-			- 32.0f
-		)
-	)
-	{
-		return true;
-	}
-
-	return false;
-}
-
-int MyApplication::CheckCursorOnCell(Vector2 curPos)
-{
-	for (int i = 0; i < 9; ++i)
-	{
-		if
-		(
-			curPos.x >=
-			boardSymbols[i]->GetTransform().position.x -
-			(
-				boardSymbols[i]->GetSprite().GetDimension().x / 2.0f
-				- 32.0f
-			)
-			&&
-			curPos.x <=
-			boardSymbols[i]->GetTransform().position.x +
-			(
-				boardSymbols[i]->GetSprite().GetDimension().x / 2.0f
-				- 32.0f
-			)
-			&&
-			curPos.y >=
-			boardSymbols[i]->GetTransform().position.y -
-			(
-				boardSymbols[i]->GetSprite().GetDimension().y / 2.0f
-				- 32.0f
-			)
-			&&
-			curPos.y <=
-			boardSymbols[i]->GetTransform().position.y +
-			(
-				boardSymbols[i]->GetSprite().GetDimension().y / 2.0f
-				- 32.0f
-			)
-		)
-		{
-			return i;
-		}
-	}
-
-	return -1;
-}
-
-bool MyApplication::CheckForDrawCondition()
-{
-	for (int i = 0; i < 9; ++i)
-	{
-		if (board.owned[i] == EPlayerType::EPlayerType_Empty)
-			return false;
-	}
-	return true;
-}
-
-bool MyApplication::CheckForWinCondition(EPlayerType playerCell)
-{
-	for (int i = 0; i <= 2; ++i)
-	{
-		for (int x = 0; x <= 2; ++x)
-		{
-			if (board.owned[i * 3 + x] != playerCell) break;
-			if (x >= 2) return true;
-		}
-
-		for (int y = 0; y <= 2; ++y)
-		{
-			if (board.owned[y * 3 + i] != playerCell) break;
-			if (y >= 2) return true;
-		}
-	}
-
-	for (int i = 0; i <= 2; ++i)
-	{
-		if (board.owned[i * 3 + i] != playerCell) break;
-		if (i >= 2) return true;
-	}
-
-	for (int i = 2; i >= 0; --i)
-	{
-		if (board.owned[i * 3 + i] != playerCell) break;
-		if (i <= 0) return true;
-	}
-
-	return false;
-}
-
-EPlayerType MyApplication::CheckForWinCondition()
-{
-	if (CheckForWinCondition(EPlayerType::EPlayerType_O)) return EPlayerType::EPlayerType_O;
-	if (CheckForWinCondition(EPlayerType::EPlayerType_X)) return EPlayerType::EPlayerType_X;
-	return EPlayerType::EPlayerType_Empty;
-}
-
-void MyApplication::GoToNextPlayer(int & curPlayer)
-{
-	curPlayer = (curPlayer % 2) + 1;
-	// Index | PlayerID | (activePlayer % 2) | (activePlayer % 2) + 1
-	//-------|----------|--------------------|------------------------
-	//   0   |    1     |         1          |           2
-	//   1   |    2     |         0          |           1
 }
 
 void MyApplication::OnMouseCursorMove(float x, float y)
 {
-	myCursor->GetTransform().position = Vector2(x, y);
-	needsUpdate = true; //SendMove(x, y);
+	cursorPos = Vector2(x, y);
 }
 
 void MyApplication::OnMousePress(int button)
 {
-	if (CheckCursorWithinButton(myCursor->GetTransform().position))
+	if (button == GLFW_MOUSE_BUTTON_LEFT)
 	{
-		if (activePlayer > 0)
-		{
-			if (board.status != EStatus::EStatus_End)
-			{
-				//Surrender
-				board.status = EStatus::EStatus_End;
-				board.endStatus = EEndStatus::EEndStatus_SDefeat;
-				UpdateStatusText();
-
-				SendCommand(10);
-			}
-			else
-			{
-				//Rematch (Opponent starts first)
-				RestartGame((localPlayerID % 2) + 1);
-
-				SendCommand(10);
-			}
-		}
-	}
-	else
-	{
-		// If the game is not ended...
-		if (board.status != EStatus::EStatus_End)
-		{
-			// If it's my turn...
-			if (localPlayerID == activePlayer)
-			{
-				// Find the cell I click
-				int selectedCell = CheckCursorOnCell(myCursor->GetTransform().position);
-
-				// If it's a valid cell...
-				if (selectedCell >= 0)
-				{
-					std::cout << "Pressed: " << selectedCell << std::endl;
-
-					// If the cell is empty...
-					if (board.owned[selectedCell] == EPlayerType::EPlayerType_Empty)
-					{
-						// Set last choice
-						lastChoiceIndex = selectedCell;
-						lastChoicePlayerType = board.owned[selectedCell];
-
-						// Set cell to mine
-						board.owned[selectedCell] = (EPlayerType)(activePlayer - 1); // Minus one (PlayerID starts on 1)
-						UpdateCell(selectedCell);
-
-						// Tell opponent the move
-						SendCommand(selectedCell);
-
-						// Update the game
-						UpdateGame();
-					}
-				}
-			}
-		}
+		Attack();
 	}
 }
 
-void MyApplication::SendMove(float x, float y)
+void MyApplication::OnKeyPress(int key)
 {
-	uint px, py;
-	px = (uint)x;
-	py = (uint)y;
-	DataPacker<uint> packer;
-	packer.Pack(px, sizeof(ushort) * 8);
-	packer.Pack(py, sizeof(ushort) * 8);
-
-	DataSplitter<uint> splitter;
-	splitter.Split(packer.GetData());
-
-	SendNetworkEvent(splitter.GetArray(), sizeof(uint));
+	switch (key)
+	{
+	case GLFW_KEY_A:
+		keyAxis.x -= 1.0f;
+		break;
+	case GLFW_KEY_D:
+		keyAxis.x += 1.0f;
+		break;
+	case GLFW_KEY_W:
+		keyAxis.y -= 1.0f;
+		break;
+	case GLFW_KEY_S:
+		keyAxis.y += 1.0f;
+		break;
+	}
 }
 
-void MyApplication::SendMove(Vector2 cursorPos)
+void MyApplication::OnKeyRelease(int key)
 {
-	return SendMove(cursorPos.x, cursorPos.y);
+	switch (key)
+	{
+	case GLFW_KEY_A:
+		keyAxis.x += 1.0f;
+		break;
+	case GLFW_KEY_D:
+		keyAxis.x -= 1.0f;
+		break;
+	case GLFW_KEY_W:
+		keyAxis.y += 1.0f;
+		break;
+	case GLFW_KEY_S:
+		keyAxis.y -= 1.0f;
+		break;
+	}
 }
 
-void MyApplication::SendCommand(int boardCell)
+void MyApplication::SendMove()
 {
-	DataPacker<byte> packer;
-	packer.Pack(boardCell, 8);
+	float data[12] =
+	{
+		player->GetTransform().position.x,
+		player->GetTransform().position.y,
+		player->velocity.x,
+		player->velocity.y,
+		player->acceleration.x,
+		player->acceleration.y,
+		rocket->GetTransform().position.x,
+		rocket->GetTransform().position.y,
+		rocket->velocity.x,
+		rocket->velocity.y,
+		rocket->acceleration.x,
+		rocket->acceleration.y
+	};
 
-	DataSplitter<byte> splitter;
-	splitter.Split(packer.GetData());
+	SendNetworkEvent(data, 12);
+}
 
-	SendNetworkEvent(splitter.GetArray(), sizeof(byte));
+void MyApplication::SendAttack()
+{
+	float data[2] =
+	{
+		cursorPos.x,
+		cursorPos.y
+	};
+
+	SendNetworkEvent(data, 2);
 }
 
 void MyApplication::OnReceiveNetworkEvent(byte* packedData, uint size)
@@ -484,59 +312,59 @@ void MyApplication::OnReceiveNetworkEvent(byte* packedData, uint size)
 		packer.Extract(bCommand, 8);
 
 		uint command = (uint)bCommand;
-		if (command >= 0 && command <= 8)
-		{
-			std::cout << "Received: " << command << std::endl;
+		std::cout << "Received: " << command << std::endl;
+	}
+}
 
-			// If game is not ended AND the cell is empty...
-			if 
-			(
-				board.status != EStatus::EStatus_End &&
-				board.owned[command] == EPlayerType::EPlayerType_Empty
-			)
-			{
-				// Set cell to opponent's
-				board.owned[command] = (EPlayerType)(activePlayer - 1); // Minus one (PlayerID starts on 1)
-				UpdateCell(command);
+void MyApplication::OnReceiveNetworkEvent(float* packedData, uint size)
+{
+	if (m_gameStarted == false)
+	{
+		m_gameStarted = true;
+		opponent->GetTransform().position = Vector2(packedData[0], packedData[1]);
 
-				// Update the game
-				UpdateGame();
-			}
-			else
-			{
-				// Tell opponent the move is invalid
-				SendCommand(9);
-			}
-		}
-		else
-		{
-			if (command == 9)
-			{
-				board.owned[lastChoiceIndex] = lastChoicePlayerType;
-				UpdateCell(lastChoiceIndex);
+		m_lastReceivedPos = opponent->GetTransform().position;
+		m_lastReceivedPos_Rocket = rocket->GetTransform().position;
+		m_prevReceivedTime = glfwGetTime();
+		return;
+	}
 
-				UpdateGame();
-				statusText->SetText("Invalid move!");
-			}
-			else if (command == 10)
-			{
-				if (activePlayer > 0)
-				{
-					if (board.status != EStatus::EStatus_End)
-					{
-						//Opponent Surrender
-						board.status = EStatus::EStatus_End;
-						board.endStatus = EEndStatus::EEndStatus_SVictory;
-						UpdateStatusText();
-					}
-					else
-					{
-						//Rematch
-						RestartGame(localPlayerID);
-					}
-				}
-			}
-		}
+	//m_lastReceivedPos = Vector2(packedData[0], packedData[1]);
+	
+
+	//double currentTime = glfwGetTime();
+	//double timeSinceLastReceive = currentTime - m_prevReceivedTime;
+
+	//if (timeSinceLastReceive >= NetworkListener::gNetworkFrameTime * 0.5f) //filter the noise
+	//{
+	//	Vector2 targetPos = Vector2(packedData[0], packedData[1]);
+
+	//	Vector2 dir = m_lastReceivedPos - targetPos;
+	//	float magnitude = sqrt(dir.GetSquaredMagnitude()) / timeSinceLastReceive;
+	//	Vector2 goVec = targetPos - opponent->GetTransform().position / 100.0f;
+	//	goVec.Normalize();
+	//	goVec *= magnitude;
+
+	//	Vector2 finalVel = (opponent->velocity * 0.6f) + (goVec * 0.4f);
+	//	opponent->velocity = finalVel;
+
+	//	m_lastReceivedPos = targetPos;
+	//	m_prevReceivedTime = currentTime;
+	//}
+
+	if (size == 12) //Movement
+	{
+		m_lastReceivedPos = Vector2(packedData[0], packedData[1]);
+		opponent->velocity = Vector2(packedData[2], packedData[3]);
+		opponent->acceleration = Vector2(packedData[4], packedData[5]);
+
+		m_lastReceivedPos_Rocket = Vector2(packedData[6], packedData[7]);
+		rocket->velocity = Vector2(packedData[8], packedData[9]);
+		rocket->acceleration = Vector2(packedData[10], packedData[11]);
+	}
+	else if (size == 2) //Attack
+	{
+		GenerateBullet(Vector2(packedData[0], packedData[1]), opponent->GetTransform().position, opponent->GetSprite().GetColor());
 	}
 }
 
@@ -560,15 +388,22 @@ void MyApplication::OnJoinRoomEvent(int playerID)
 
 	if (playerID > 1)
 	{
-		otherCursor->SetActive(true);
-		SendMove(myCursor->GetTransform().position.x, myCursor->GetTransform().position.y);
-		UpdateBoard();
+		if (!isRoomOwner)
+		{
+			PhysicalGameObject* temp = player;
+			player = opponent;
+			opponent = temp;
+		}
+		player->SetActive(true);
+		opponent->SetActive(true);
+		rocket->SetActive(true);
 
-		activePlayer = 1;
-		if (localPlayerID == activePlayer)
-			board.status = EStatus::EStatus_Playing;
-		else
-			board.status = EStatus::EStatus_Waiting;
+		//SendMove(myCursor->GetTransform().position.x, myCursor->GetTransform().position.y);
+		//UpdateBoard();
+
+		SendMove();
+
+		board.status = EStatus::EStatus_Playing;
 	}
 
 	UpdateStatusText();
@@ -578,11 +413,21 @@ void MyApplication::OnLeaveRoomEvent(int playerID)
 {
 	if (localPlayerID != playerID)
 	{
-		otherCursor->SetActive(false);
+		opponent->SetActive(false);
+		rocket->SetActive(false);
+		m_gameStarted = false;
 	}
 }
 
 void MyApplication::SendNetworkEvent(byte* packedData, uint size)
+{
+	if (m_networkListener != NULL)
+	{
+		m_networkListener->sendEvent(packedData, size);
+	}
+}
+
+void MyApplication::SendNetworkEvent(float* packedData, uint size)
 {
 	if (m_networkListener != NULL)
 	{

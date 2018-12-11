@@ -3,18 +3,25 @@
 #include "Application.h"
 #include "Spritesheet.h"
 #include "Text.h"
+#include "PhysicalGameObject.h"
+#include "PhysicalDesturctible.h"
 #include "BoardState.h"
 
 class MyApplication : public Application
 {
+private:
+	Container<PhysicalDestructible> m_Bullets;
+	Container<PhysicalDestructible> m_Rockets;
+
+	Vector2 m_lastReceivedPos;
+	double m_prevReceivedTime;
+
+	Vector2 m_lastReceivedPos_Rocket;
+	double m_prevReceivedTime_Rocket;
+	bool m_gameStarted;
 public:
 	//Temporary names
-	GameObject* myCursor;
-	GameObject* otherCursor;
 	Vector2 otherCursorPos;
-	float maxTime = 0.1f;
-	float timer = 0.0f;
-	bool needsUpdate = false;
 
 	int localPlayerID = -1;
 	int activePlayer = -1;
@@ -22,9 +29,14 @@ public:
 
 	Text* statusText;
 	BoardState board;
-	GameObject* boardSprite;
-	Text** boardSymbols;
-	Text* functionButton;
+
+	PhysicalGameObject* player;
+	PhysicalGameObject* opponent;
+
+	PhysicalGameObject* rocket;
+	
+	Vector2 keyAxis;
+	Vector2 cursorPos;
 
 	int lastChoiceIndex = -1;
 	EPlayerType lastChoicePlayerType = EPlayerType::EPlayerType_Empty;
@@ -41,29 +53,21 @@ public:
 	void Start() override;
 	void Update(float deltaTime) override;
 
-	void PreUpdateGame();
-	void PostUpdateGame();
-	void UpdateGame();
+	void GenerateBullet(Vector2 cursorPosition, Vector2 playerPosition, Color playerColor);
+	void Attack();
 	void UpdateStatusText();
-	void UpdateCell(int cell);
-	void UpdateBoard();
-	void RestartGame(int startingPlayer);
-
-	bool CheckCursorWithinButton(Vector2 curPos);
-	int CheckCursorOnCell(Vector2 curPos);
-	bool CheckForDrawCondition();
-	bool CheckForWinCondition(EPlayerType playerCell);
-	EPlayerType CheckForWinCondition();
-	void GoToNextPlayer(int& curPlayer);
 
 	void OnMouseCursorMove(float x, float y);
 	void OnMousePress(int button);
-	void SendMove(float x, float y);
-	void SendMove(Vector2 cursorPos);
-	void SendCommand(int boardCell);
+	void OnKeyPress(int key);
+	void OnKeyRelease(int key);
+	void SendMove();
+	void SendAttack();
 	virtual void OnReceiveNetworkEvent(byte* packedData, uint size);
+	virtual void OnReceiveNetworkEvent(float * packedData, uint size);
 	virtual void OnCreateRoomEvent(int playerID);
 	virtual void OnJoinRoomEvent(int playerID);
 	virtual void OnLeaveRoomEvent(int playerID);
 	virtual void SendNetworkEvent(byte* packedData, uint size);
+	virtual void SendNetworkEvent(float* packedData, uint size);
 };

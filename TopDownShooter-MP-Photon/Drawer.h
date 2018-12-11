@@ -9,6 +9,9 @@
 
 class Drawer
 {
+private:
+	static char* pathToMedia;
+
 public:
 	static void LoadPNG(const char* path, GLuint textureID, unsigned int& width, unsigned int& height);
 	static void LoadTexture(const char* fileName, GLuint textureID, unsigned int& width, unsigned int& height);

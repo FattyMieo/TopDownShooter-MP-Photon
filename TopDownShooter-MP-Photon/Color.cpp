@@ -40,6 +40,15 @@ Color::Color(GLubyte r, GLubyte g, GLubyte b, GLubyte a)
 	this->a = a;
 }
 
+bool Color::Equal(Color c)
+{
+	return
+		this->r == c.r &&
+		this->g == c.g &&
+		this->b == c.b &&
+		this->a == c.a;
+}
+
 Color Color::Random(Color darker, Color lighter)
 {
 	Color ret;

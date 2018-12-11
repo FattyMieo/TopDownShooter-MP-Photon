@@ -10,6 +10,7 @@
 #include "IDrawable.h"
 #include "Container.h"
 #include "GameObject.h"
+#include "PhysicalGameObject.h"
 #include "TypeDefinition.h"
 
 class Application : public IRunnable, public IDrawable
@@ -18,6 +19,7 @@ protected:
 	AudioManager* m_audioManager;
 	NetworkListener* m_networkListener;
 	Container<GameObject> m_GameObjects;
+	Container<PhysicalGameObject> m_PhysObjects;
 
 public:
 	Application();

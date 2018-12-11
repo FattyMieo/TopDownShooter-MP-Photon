@@ -1,7 +1,7 @@
 #include "Drawer.h"
 #include <iostream>
 
-const char* pathToMedia = "../Media/";
+char* Drawer::pathToMedia = "../Media/";
 
 void Drawer::LoadPNG(const char* path, GLuint textureID, unsigned int& width, unsigned int& height)
 {

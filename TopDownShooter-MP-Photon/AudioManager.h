@@ -9,6 +9,8 @@
 class AudioManager
 {
 private:
+	static char* pathToMedia;
+
 	FMOD::System* m_system;
 
 	FMOD::Sound* m_sound[SFX_COUNT];

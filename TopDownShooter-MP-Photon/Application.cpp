@@ -5,7 +5,19 @@ Application::Application()
 
 }
 
-Application::~Application() { }
+Application::~Application()
+{
+	std::list<GameObject*>::iterator it = m_GameObjects.GetList().begin();
+
+	while (it != m_GameObjects.GetList().end())
+	{
+		delete *it;
+		++it;
+	}
+
+	m_GameObjects.GetList().clear();
+	m_PhysObjects.GetList().clear();
+}
 
 void Application::InitDependencies(AudioManager* audioManager, NetworkListener* networkListener)
 {
@@ -17,14 +29,43 @@ void Application::Start() { }
 
 void Application::Update(float deltaTime)
 {
-	std::list<GameObject*>::iterator it = m_GameObjects.GetList().begin();
-
-	while (it != m_GameObjects.GetList().end())
+	for
+	(
+		std::list<GameObject*>::iterator it = m_GameObjects.GetList().begin();
+		it != m_GameObjects.GetList().end();
+		++it
+	)
 	{
 		GameObject* go = *it;
 		if (go->IsActive())
 			go->Update(deltaTime);
-		++it;
+	}
+
+	std::vector<PhysicalGameObject*> physObjVec;
+	for
+	(
+		std::list<PhysicalGameObject*>::iterator it = m_PhysObjects.GetList().begin();
+		it != m_PhysObjects.GetList().end();
+		++it
+	)
+	{
+		PhysicalGameObject* go = *it;
+		if (go->IsActive())
+		{
+			for
+			(
+				std::vector<PhysicalGameObject*>::iterator other_it = physObjVec.begin();
+				other_it != physObjVec.end();
+				++other_it
+			)
+			{
+				PhysicalGameObject* other = *other_it;
+
+				go->UpdateCollision(deltaTime, *other);
+			}
+
+			physObjVec.push_back(go);
+		}
 	}
 }
 

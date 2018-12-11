@@ -17,6 +17,8 @@ public:
 	Color(GLubyte r, GLubyte g, GLubyte b);
 	Color(GLubyte r, GLubyte g, GLubyte b, GLubyte a);
 
+	bool Equal(Color c);
+
 	static Color Random(Color a, Color b);
 	static Color Lerp(Color a, Color b, float t);
 };

@@ -28,9 +28,27 @@ void Vector2::SetEqual(float f)
 	this->y = f;
 }
 
+Vector2 Vector2::GetNormalized()
+{
+	return *this / sqrt(GetSquaredMagnitude());
+}
+
+void Vector2::Normalize()
+{
+	Vector2 n = GetNormalized();
+	this->x = n.x;
+	this->y = n.y;
+}
+
 float Vector2::GetSquaredMagnitude()
 {
 	return (this->x * this->x) + (this->y * this->y);
+}
+
+float Vector2::GetSquaredDistanceTo(Vector2 vec)
+{
+	Vector2 delta = vec - *this;
+	return (delta.x * delta.x) + (delta.y * delta.y);
 }
 
 Vector2 Vector2::operator+(Vector2 vec)
@@ -50,7 +68,7 @@ Vector2& Vector2::operator+=(Vector2 vec)
 	return *this;
 }
 
-Vector2 & Vector2::operator-=(Vector2 vec)
+Vector2& Vector2::operator-=(Vector2 vec)
 {
 	this->x -= vec.x;
 	this->y -= vec.y;
@@ -121,6 +139,11 @@ Vector2 Vector2::Lerp(Vector2 a, Vector2 b, float t)
 	ret.y = MathExtension::Lerp(a.y, b.y, t);
 
 	return ret;
+}
+
+float Vector2::GetSquaredDistanceTo(Vector2 a, Vector2 b)
+{
+	return a.GetSquaredDistanceTo(b);
 }
 
 Vector2 operator+(const float f, Vector2 vec)

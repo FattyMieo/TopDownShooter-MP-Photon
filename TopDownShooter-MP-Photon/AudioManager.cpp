@@ -1,6 +1,7 @@
 #include "AudioManager.h"
 
-const char* pathToMedia = "../Media/";
+char* AudioManager::pathToMedia = "../Media/";
+
 AudioManager::AudioManager()
 {
 	FMODExtension::FMOD_Init(m_system);
@@ -62,7 +63,7 @@ bool AudioManager::PlayBGM(float volume, bool forceStart)
 	return PlayBGM((AudioType_BGM)0, volume, forceStart);
 }
 
-bool AudioManager::PlayBGM(AudioType_BGM slot, float volume, bool forceStart = false)
+bool AudioManager::PlayBGM(AudioType_BGM slot, float volume, bool forceStart)
 {
 	FMOD_RESULT result = m_system->playSound(FMOD_CHANNEL_REUSE, m_music[slot], false, &m_musicChannel);
 	if (!FMODExtension::FMOD_ErrorCheck(result)) return false;

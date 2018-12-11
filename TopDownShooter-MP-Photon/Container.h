@@ -17,6 +17,7 @@ public:
 
 	~Container()
 	{
+		/*
 		std::list<T*>::iterator it = m_list.begin();
 
 		while (it != m_list.end())
@@ -26,6 +27,7 @@ public:
 		}
 
 		m_list.clear();
+		*/
 	}
 
 	std::list<T*>& GetList()

@@ -5,6 +5,13 @@
 class NetworkListener : private ExitGames::LoadBalancing::Listener
 {
 public:
+	// The higher networkFPS, the higher bandwidth requirement of your game.
+	// ** about 30FPS is common data sync rate for real time games
+	// ** slower-paced action games could use as low as 10 FPS
+
+	static const float networkFPS;
+	static const float gNetworkFrameTime;
+
 	NetworkListener();
 	void run(void);
 	void connect(void);
@@ -13,6 +20,7 @@ public:
 	//void opJoinRandomRoom(void);
 	//void opJoinOrCreateRoom(void);
 	void sendEvent(unsigned char* data, int size);
+	void sendEvent(float * data, int size);
 
 	//Singleton
 	static NetworkListener* GetInstance()

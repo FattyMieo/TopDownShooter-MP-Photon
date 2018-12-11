@@ -22,7 +22,7 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{AD25279B-8F4C-4A8F-8935-69C4950C5458}</ProjectGuid>
     <RootNamespace>TopDownShooterMPPhoton</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -127,6 +127,7 @@
     <ClCompile Include="MyApplication.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="NetworkListener.cpp" />
+    <ClCompile Include="PhysicalDesturctible.cpp" />
     <ClCompile Include="PhysicalGameObject.cpp" />
     <ClCompile Include="Sprite.cpp" />
     <ClCompile Include="Spritesheet.cpp" />
@@ -159,7 +160,9 @@
     <ClInclude Include="MyApplication.h" />
     <ClInclude Include="NetworkListener.h" />
     <ClInclude Include="PhotonKey.h" />
+    <ClInclude Include="PhysicalDesturctible.h" />
     <ClInclude Include="PhysicalGameObject.h" />
+    <ClInclude Include="PhysicsExtension.h" />
     <ClInclude Include="ResDefinition.h" />
     <ClInclude Include="Sprite.h" />
     <ClInclude Include="Spritesheet.h" />

@@ -7,6 +7,9 @@ static const ExitGames::Common::JString appId = PhotonKey::GenerateKey(); // set
 static const ExitGames::Common::JString appVersion = L"1.0";
 static const ExitGames::Common::JString PLAYER_NAME = L"Windows";
 
+const float NetworkListener::networkFPS = 30.0f;
+const float NetworkListener::gNetworkFrameTime = 1.0f / networkFPS;
+
 // Functions
 NetworkListener::NetworkListener() : mLoadBalancingClient(*this, appId, appVersion, ExitGames::Photon::ConnectionProtocol::TCP)
 {
@@ -64,6 +67,17 @@ void NetworkListener::sendEvent(unsigned char* data, int size)
 	}
 }
 
+void NetworkListener::sendEvent(float* data, int size)
+{
+	//static int64 count = 0;
+	//mLoadBalancingClient.opRaiseEvent(false, ++count, 0);
+
+	if (mLoadBalancingClient.getIsInRoom() || mLoadBalancingClient.getIsInGameRoom())
+	{
+		mLoadBalancingClient.opRaiseEvent(true, data, size, 0);
+	}
+}
+
 // protocol implementations
 
 void NetworkListener::debugReturn(int debugLevel, const ExitGames::Common::JString& string)
@@ -108,8 +122,24 @@ void NetworkListener::customEventAction(int playerNr, nByte eventCode, const Exi
 //	EGLOG(ExitGames::Common::DebugLevel::ALL, L"");
 //	mpOutputListener->write(ExitGames::Common::JString(L"r") + ExitGames::Common::ValueObject<long long>(eventContent).getDataCopy() + L" ");
 
-	unsigned char* data = ExitGames::Common::ValueObject<unsigned char*>(eventContent).getDataCopy();
-	const int size = *ExitGames::Common::ValueObject<unsigned char*>(eventContent).getSizes();
+	//unsigned char* data = ExitGames::Common::ValueObject<unsigned char*>(eventContent).getDataCopy();
+	//const int size = *ExitGames::Common::ValueObject<unsigned char*>(eventContent).getSizes();
+	//if (data)
+	//{
+	//	for (int i = 0; i < size; i++)
+	//	{
+	//		std::cout << (unsigned int)data[i] << " ";
+	//	}
+	//	std::cout << "received " << size << " bytes" << std::endl;
+	//	MyApplication::GetInstance()->OnReceiveNetworkEvent(data, (unsigned int)size);
+	//}
+	//else
+	//{
+	//	std::cout << "Invalid data!" << std::endl;
+	//}
+
+	float* data = ExitGames::Common::ValueObject<float*>(eventContent).getDataCopy();
+	const int size = *ExitGames::Common::ValueObject<float*>(eventContent).getSizes();
 	if (data)
 	{
 		for (int i = 0; i < size; i++)
@@ -121,7 +151,7 @@ void NetworkListener::customEventAction(int playerNr, nByte eventCode, const Exi
 	}
 	else
 	{
-		std::cout << "Invalid data!" << std::endl;
+		std::cout << "invalid data" << std::endl;
 	}
 }
 
